@@ -68,6 +68,25 @@ export default defineConfig(() => {
         },
         server: {
             port: 4000,
+            proxy: {
+                '/api': {
+                    target: process.env.VITE_API_URL || 'http://localhost:3000',
+                    changeOrigin: true,
+                    secure: true,
+                    // Log proxy requests (helpful for debugging)
+                    configure: (proxy, options) => {
+                        proxy.on('error', (err, req, res) => {
+                            console.log('proxy error', err);
+                        });
+                        proxy.on('proxyReq', (proxyReq, req, res) => {
+                            console.log('Sending Request to:', proxyReq.path);
+                        });
+                        proxy.on('proxyRes', (proxyRes, req, res) => {
+                            console.log('Received Response:', proxyRes.statusCode);
+                        });
+                    }
+                }
+            }
         },
         preview: {
             port: 4173,
