@@ -887,6 +887,19 @@ div.icon img {
     right: 300px;
 }
 
+#fsmEditorPanel {
+    width: 450px;
+    font: inherit;
+    display: none;
+    top: 90px;
+    left: 300px;
+    position: fixed;
+    z-index: 100;
+    background: var(--bg-primary);
+    border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 #moduleProperty-toolTip {
     padding: 10px;
 }

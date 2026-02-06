@@ -278,7 +278,7 @@ export function deleteSelected() {
         if (
             !(
                 simulationArea.multipleObjectSelections[i].objectType ===
-                    'Node' &&
+                'Node' &&
                 simulationArea.multipleObjectSelections[i].type !== 2
             )
         )
@@ -358,6 +358,7 @@ export function setupPanels() {
     setupPanelListeners('#moduleProperty')
     setupPanelListeners('#layoutDialog')
     setupPanelListeners('#verilogEditorPanel')
+    setupPanelListeners('#fsmEditorPanel')
     setupPanelListeners('.timing-diagram-panel')
     setupPanelListeners('.testbench-manual-panel')
 

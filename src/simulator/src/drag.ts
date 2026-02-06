@@ -72,13 +72,17 @@ export function dragging(targetEl: HTMLElement, DragEl: HTMLElement): void {
         ],
     })
 
+    // Use element's ID to properly reference it in jQuery selector
+    const dragElId = DragEl.id ? `#${DragEl.id}` : ''
+
     $(DragEl).on('mousedown', () => {
-        $(`.draggable-panel:not(${DragEl})`).css('z-index', '99')
-        $(DragEl).css('z-index', '99')
+        // Set z-index for all other panels to lower value
+        $(`.draggable-panel`).not(DragEl).css('z-index', '99')
+        $(DragEl).css('z-index', '100')
     })
 
     let panelElements = document.querySelectorAll(
-        '.elementPanel, .layoutElementPanel, #moduleProperty, #layoutDialog, #verilogEditorPanel, .timing-diagram-panel, .testbench-manual-panel, .quick-btn'
+        '.elementPanel, .layoutElementPanel, #moduleProperty, #layoutDialog, #verilogEditorPanel, #fsmEditorPanel, .timing-diagram-panel, .testbench-manual-panel, .quick-btn'
     )
 
     panelElements.forEach((element) => {

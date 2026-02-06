@@ -52,6 +52,17 @@
     <!-- --------------------------------------------------------------------------------------------- -->
 
     <!-- --------------------------------------------------------------------------------------------- -->
+    <!-- FSM Editor Panel (legacy overlay) -->
+    <FSMEditorPanel v-if="!simulatorMobileStore.showMobileView" />
+    
+    <!-- FSM Editor Tab Layout (new full-screen tab mode) -->
+    <FSMEditorTabLayout v-if="!simulatorMobileStore.showMobileView" />
+    
+    <!-- Floating Back to FSM Button -->
+    <BackToFSMButton />
+    <!-- --------------------------------------------------------------------------------------------- -->
+
+    <!-- --------------------------------------------------------------------------------------------- -->
     <!-- Element Properties Panel -->
     <PropertiesPanel v-if="!simulatorMobileStore.showMobileView" />
     <!-- --------------------------------------------------------------------------------------------- -->
@@ -248,6 +259,9 @@
 <script lang="ts" setup>
 import VerilogEditorPanel from './Panels/VerilogEditorPanel/VerilogEditorPanel.vue'
 import VerilogEditorPanelMobile from './Panels/VerilogEditorPanel/VerilogEditorPanelMobile.vue'
+import FSMEditorPanel from './Panels/FSMEditorPanel/FSMEditorPanel.vue'
+import FSMEditorTabLayout from './Panels/FSMEditorPanel/FSMEditorTabLayout.vue'
+import BackToFSMButton from './Panels/FSMEditorPanel/BackToFSMButton.vue'
 import ElementsPanel from './Panels/ElementsPanel/ElementsPanel.vue'
 import PropertiesPanel from './Panels/PropertiesPanel/PropertiesPanel.vue'
 import TimingDiagramPanel from './Panels/TimingDiagramPanel/TimingDiagramPanel.vue'
