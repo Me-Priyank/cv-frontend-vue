@@ -9,132 +9,199 @@
                 </button>
             </div>
 
-            <!-- Tools Section -->
-            <div class="fsm-section">
-                <h4>Tools</h4>
-                <div class="fsm-tool-group">
-                    <button 
-                        :class="['fsm-tool-btn', { active: tool === 'select' }]" 
-                        @click="setTool('select')"
-                        title="Select (S)"
-                    >
-                        <i class="fas fa-mouse-pointer"></i> Select
-                    </button>
-                    <button 
-                        :class="['fsm-tool-btn', { active: tool === 'state' }]" 
-                        @click="setTool('state')"
-                        title="Add State (A)"
-                    >
-                        <i class="fas fa-circle"></i> Add State
-                    </button>
-                    <button 
-                        :class="['fsm-tool-btn', { active: tool === 'transition' }]" 
-                        @click="setTool('transition')"
-                        title="Add Transition (T)"
-                    >
-                        <i class="fas fa-long-arrow-alt-right"></i> Add Transition
-                    </button>
+            <!-- Tools: Compact horizontal icon bar (always visible) -->
+            <div class="fsm-section fsm-toolbar-section">
+                <div class="fsm-icon-toolbar">
+                    <div class="fsm-toolbar-group">
+                        <button 
+                            :class="['fsm-icon-btn', { active: tool === 'select' }]" 
+                            @click="setTool('select')"
+                            title="Select (S)"
+                        >
+                            <i class="fas fa-mouse-pointer"></i>
+                        </button>
+                        <button 
+                            :class="['fsm-icon-btn', { active: tool === 'state' }]" 
+                            @click="setTool('state')"
+                            title="Add State (A)"
+                        >
+                            <i class="fas fa-circle"></i>
+                        </button>
+                        <button 
+                            :class="['fsm-icon-btn', { active: tool === 'transition' }]" 
+                            @click="setTool('transition')"
+                            title="Add Transition (T)"
+                        >
+                            <i class="fas fa-long-arrow-alt-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="fsm-toolbar-separator"></div>
+
+                    <div class="fsm-toolbar-group">
+                        <button class="fsm-icon-btn" @click="performUndo" :disabled="!fsmStore.canUndo" title="Undo (Ctrl+Z)">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                        <button class="fsm-icon-btn" @click="performRedo" :disabled="!fsmStore.canRedo" title="Redo (Ctrl+Y)">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                        <button class="fsm-icon-btn fsm-icon-btn--danger" @click="clearCanvas" title="Clear All">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Edit Section -->
-            <div class="fsm-section">
-                <h4>Edit</h4>
-                <div class="fsm-btn-row">
-                    <button class="fsm-action-btn" @click="clearCanvas" title="Clear All">
-                        <i class="fas fa-trash"></i> Clear
-                    </button>
-                    <button 
-                        class="fsm-action-btn" 
-                        @click="performUndo" 
-                        :disabled="!fsmStore.canUndo"
-                        title="Undo (Ctrl+Z)"
-                    >
-                        <i class="fas fa-undo"></i> Undo
-                    </button>
-                    <button 
-                        class="fsm-action-btn" 
-                        @click="performRedo" 
-                        :disabled="!fsmStore.canRedo"
-                        title="Redo (Ctrl+Y)"
-                    >
-                        <i class="fas fa-redo"></i> Redo
-                    </button>
+            <!-- Primary Action: Synthesize (always visible, always clickable) -->
+            <div class="fsm-section fsm-actions-section">
+                <button 
+                    class="fsm-primary-btn" 
+                    @click="synthesizeCircuit"
+                    title="Convert FSM to circuit"
+                >
+                    <i class="fas fa-microchip"></i> Synthesize Circuit
+                </button>
+            </div>
+
+            <!-- Collapsible: Configuration -->
+            <div class="fsm-section fsm-collapsible" :class="{ collapsed: sections.config }">
+                <h4 class="fsm-section-toggle" @click="sections.config = !sections.config">
+                    <span>Configuration</span>
+                    <i :class="sections.config ? 'fas fa-chevron-right' : 'fas fa-chevron-down'"></i>
+                </h4>
+                <div v-show="!sections.config" class="fsm-section-body">
+                    <div class="fsm-config-row">
+                        <label>Type:</label>
+                        <select v-model="fsmType" class="fsm-select">
+                            <option value="MOORE">Moore</option>
+                            <option value="MEALY">Mealy</option>
+                        </select>
+                    </div>
+                    <div class="fsm-config-row">
+                        <label>Encoding:</label>
+                        <select v-model="encoding" class="fsm-select">
+                            <option value="BINARY">Binary</option>
+                            <option value="GRAY">Gray Code</option>
+                            <option value="ONE_HOT">One-Hot</option>
+                        </select>
+                    </div>
+                    <div class="fsm-config-row">
+                        <label>Template:</label>
+                        <select v-model="selectedTemplate" @change="loadTemplateHandler" class="fsm-select">
+                            <option value="">-- Select --</option>
+                            <option value="sequence_detector">Sequence Detector (101)</option>
+                            <option value="traffic_light">Traffic Light Controller</option>
+                            <option value="counter_2bit">2-Bit Counter</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <!-- Configuration Section -->
-            <div class="fsm-section">
-                <h4>Configuration</h4>
-                <div class="fsm-field">
-                    <label>Type:</label>
-                    <select v-model="fsmType" class="fsm-select">
-                        <option value="MOORE">Moore</option>
-                        <option value="MEALY">Mealy</option>
-                    </select>
-                </div>
-                <div class="fsm-field">
-                    <label>Encoding:</label>
-                    <select v-model="encoding" class="fsm-select">
-                        <option value="BINARY">Binary</option>
-                        <option value="GRAY">Gray Code</option>
-                        <option value="ONE_HOT">One-Hot</option>
-                    </select>
-                </div>
-                <div class="fsm-field">
-                    <label>Template:</label>
-                    <select v-model="selectedTemplate" @change="loadTemplateHandler" class="fsm-select">
-                        <option value="">-- Select --</option>
-                        <option value="sequence_detector">Sequence Detector (101)</option>
-                        <option value="traffic_light">Traffic Light Controller</option>
-                        <option value="counter_2bit">2-Bit Counter</option>
-                    </select>
+            <!-- Collapsible: Advanced (Optimization + Export + K-Map) -->
+            <div class="fsm-section fsm-collapsible" :class="{ collapsed: sections.advanced }">
+                <h4 class="fsm-section-toggle" @click="sections.advanced = !sections.advanced">
+                    <span>Advanced</span>
+                    <i :class="sections.advanced ? 'fas fa-chevron-right' : 'fas fa-chevron-down'"></i>
+                </h4>
+                <div v-show="!sections.advanced" class="fsm-section-body">
+                    <div class="fsm-subsection">
+                        <span class="fsm-sublabel">Optimization</span>
+                         <div class="fsm-btn-row">
+                            <button class="fsm-action-btn" @click="minimizeStates" title="Reduce equivalent states (Hopcroft)">
+                                <i class="fas fa-compress-arrows-alt"></i> Minimize States
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="fsm-subsection">
+                        <span class="fsm-sublabel">Metrics</span>
+                        <button class="fsm-action-btn" @click="toggleMetrics" style="width: 100%">
+                            <i class="fas fa-chart-bar"></i> {{ showMetrics ? 'Hide' : 'Show' }} Metrics
+                        </button>
+                        <div v-if="showMetrics && optimizationMetrics" class="fsm-metrics-inline">
+                            <div class="fsm-metric">
+                                <span>Flip-Flops:</span>
+                                <strong>{{ optimizationMetrics.flipFlops }}</strong>
+                            </div>
+                            <div class="fsm-metric">
+                                <span>Est. Gates:</span>
+                                <strong>{{ optimizationMetrics.gateEstimate }}</strong>
+                            </div>
+                            <div v-if="optimizationMetrics.statesBeforeMin > optimizationMetrics.statesAfterMin" class="fsm-metric">
+                                <span>Reduced:</span>
+                                <strong>{{ optimizationMetrics.statesBeforeMin }} → {{ optimizationMetrics.statesAfterMin }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fsm-subsection">
+                        <span class="fsm-sublabel">K-Map Visualization</span>
+                        <button 
+                            class="fsm-action-btn"
+                            @click="generateKMaps"
+                            style="width: 100%"
+                        >
+                            <span>📊</span> Generate K-Maps
+                        </button>
+                        <div v-if="showKMaps && kmapData.length > 0" class="kmap-container">
+                            <div v-for="(kmap, idx) in kmapData" :key="idx" class="kmap-card">
+                                <div class="kmap-title">{{ kmap.variable }}</div>
+                                <div class="kmap-grid" :style="getKmapGridStyle(kmap.variables)">
+                                    <div class="kmap-header-cell"></div>
+                                    <div 
+                                        v-for="(col, colIdx) in kmap.colHeaders" 
+                                        :key="'col-'+colIdx" 
+                                        class="kmap-header-cell"
+                                    >{{ col }}</div>
+                                    <template v-for="(row, rowIdx) in kmap.rows" :key="'row-'+rowIdx">
+                                        <div class="kmap-header-cell">{{ kmap.rowHeaders[rowIdx] }}</div>
+                                        <div 
+                                            v-for="(cell, cellIdx) in row" 
+                                            :key="'cell-'+rowIdx+'-'+cellIdx"
+                                            :class="['kmap-cell', cell.grouped ? 'kmap-grouped' : '']"
+                                        >{{ cell.value }}</div>
+                                    </template>
+                                </div>
+                                <div class="kmap-expression">
+                                    <strong>{{ kmap.variable }} = </strong>{{ kmap.minimizedExpr || '0' }}
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else-if="showKMaps && kmapData.length === 0" class="kmap-empty">
+                            No outputs to visualize
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Actions Section -->
-            <div class="fsm-section">
-                <h4>Actions</h4>
-                <div class="fsm-action-group">
-                    <button 
-                        class="fsm-primary-btn" 
-                        @click="synthesizeCircuit"
-                        :disabled="!canSynthesize"
-                    >
-                        <i class="fas fa-microchip"></i> Synthesize Circuit
-                    </button>
-                    <button class="fsm-secondary-btn" @click="exportVerilog">
-                        <i class="fas fa-code"></i> Export Verilog
-                    </button>
-                </div>
-            </div>
-
-            <!-- Optimization Section -->
-            <div class="fsm-section">
-                <h4>Optimization</h4>
-                <div class="fsm-action-group">
-                    <button class="fsm-action-btn" @click="minimizeStates">
-                        <i class="fas fa-compress-arrows-alt"></i> Minimize
-                    </button>
-                    <button class="fsm-action-btn" @click="toggleMetrics">
-                        <i class="fas fa-chart-bar"></i> Metrics
-                    </button>
-                </div>
-            </div>
-
-            <!-- Import/Export Section -->
-            <div class="fsm-section">
-                <h4>Import / Export</h4>
-                <div class="fsm-action-group">
-                    <button class="fsm-action-btn" @click="triggerVerilogImport">
-                        <i class="fas fa-file-import"></i> Import Verilog
-                    </button>
-                    <button class="fsm-action-btn" @click="saveFSM">
-                        <i class="fas fa-save"></i> Save FSM
-                    </button>
-                    <button class="fsm-action-btn" @click="triggerLoadFSM">
-                        <i class="fas fa-folder-open"></i> Load FSM
-                    </button>
+            <!-- Collapsible: Import / Export -->
+            <div class="fsm-section fsm-collapsible" :class="{ collapsed: sections.importExport }">
+                <h4 class="fsm-section-toggle" @click="sections.importExport = !sections.importExport">
+                    <span>Import / Export</span>
+                    <i :class="sections.importExport ? 'fas fa-chevron-right' : 'fas fa-chevron-down'"></i>
+                </h4>
+                <div v-show="!sections.importExport" class="fsm-section-body">
+                    <div class="fsm-subsection">
+                        <span class="fsm-sublabel">Verilog</span>
+                        <div class="fsm-btn-row">
+                            <button class="fsm-action-btn" @click="triggerVerilogImport" title="Import FSM from .v file">
+                                <i class="fas fa-file-import"></i> Import
+                            </button>
+                            <button class="fsm-action-btn" @click="exportVerilog" title="Export as Verilog code">
+                                <i class="fas fa-file-export"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                    <div class="fsm-subsection">
+                        <span class="fsm-sublabel">JSON Data</span>
+                        <div class="fsm-btn-row">
+                            <button class="fsm-action-btn" @click="saveFSM" title="Save FSM as JSON">
+                                <i class="fas fa-save"></i> Save JSON
+                            </button>
+                            <button class="fsm-action-btn" @click="triggerLoadFSM" title="Load FSM from JSON">
+                                <i class="fas fa-folder-open"></i> Load JSON
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <input 
                     ref="fileInput" 
@@ -152,69 +219,8 @@
                 />
             </div>
 
-            <!-- Metrics Panel -->
-            <div v-if="showMetrics && optimizationMetrics" class="fsm-metrics-panel">
-                <h4>Metrics</h4>
-                <div class="fsm-metric">
-                    <span>Flip-Flops:</span>
-                    <strong>{{ optimizationMetrics.flipFlops }}</strong>
-                </div>
-                <div class="fsm-metric">
-                    <span>Est. Gates:</span>
-                    <strong>{{ optimizationMetrics.gateEstimate }}</strong>
-                </div>
-                <div v-if="optimizationMetrics.statesBeforeMin > optimizationMetrics.statesAfterMin" class="fsm-metric">
-                    <span>States Reduced:</span>
-                    <strong>{{ optimizationMetrics.statesBeforeMin }} → {{ optimizationMetrics.statesAfterMin }}</strong>
-                </div>
-            </div>
-
-            <!-- K-Map Visualization Section -->
-            <div class="fsm-section">
-                <h4>K-MAP VISUALIZATION</h4>
-                <button 
-                    class="fsm-action-btn"
-                    @click="generateKMaps"
-                    :disabled="!fsmStore.currentFSM || fsmStore.currentFSM.states.length === 0"
-                >
-                    <span>📊</span> Generate K-Maps
-                </button>
-                
-                <div v-if="showKMaps && kmapData.length > 0" class="kmap-container">
-                    <div v-for="(kmap, idx) in kmapData" :key="idx" class="kmap-card">
-                        <div class="kmap-title">{{ kmap.variable }}</div>
-                        <div class="kmap-grid" :style="getKmapGridStyle(kmap.variables)">
-                            <!-- K-map header row -->
-                            <div class="kmap-header-cell"></div>
-                            <div 
-                                v-for="(col, colIdx) in kmap.colHeaders" 
-                                :key="'col-'+colIdx" 
-                                class="kmap-header-cell"
-                            >{{ col }}</div>
-                            
-                            <!-- K-map data rows -->
-                            <template v-for="(row, rowIdx) in kmap.rows" :key="'row-'+rowIdx">
-                                <div class="kmap-header-cell">{{ kmap.rowHeaders[rowIdx] }}</div>
-                                <div 
-                                    v-for="(cell, cellIdx) in row" 
-                                    :key="'cell-'+rowIdx+'-'+cellIdx"
-                                    :class="['kmap-cell', cell.grouped ? 'kmap-grouped' : '']"
-                                >{{ cell.value }}</div>
-                            </template>
-                        </div>
-                        <div class="kmap-expression">
-                            <strong>{{ kmap.variable }} = </strong>{{ kmap.minimizedExpr || '0' }}
-                        </div>
-                    </div>
-                </div>
-                <div v-else-if="showKMaps && kmapData.length === 0" class="kmap-empty">
-                    No outputs to visualize
-                </div>
-            </div>
-
-            <!-- Status Bar -->
+            <!-- Status Bar (always visible, pinned to bottom - only shows counts) -->
             <div class="fsm-status">
-                <div :class="['fsm-status-msg', validationClass]">{{ validationMessage }}</div>
                 <div class="fsm-status-info">
                     States: {{ fsmStore.currentFSM?.states?.length || 0 }} | 
                     Transitions: {{ fsmStore.currentFSM?.transitions?.length || 0 }}
@@ -232,6 +238,31 @@
                 @mouseup="handleMouseUp"
                 @dblclick="handleDoubleClick"
             ></canvas>
+
+            <!-- Empty Canvas: Getting Started overlay -->
+            <div 
+                v-if="!fsmStore.currentFSM || fsmStore.currentFSM.states.length === 0"
+                class="fsm-empty-hint"
+            >
+                <div class="fsm-empty-hint__icon">🔧</div>
+                <h3 class="fsm-empty-hint__title">Getting Started</h3>
+                <ol class="fsm-empty-hint__steps">
+                    <li>Select <strong>Add State</strong> <kbd>A</kbd> from the toolbar</li>
+                    <li>Click on the canvas to place states</li>
+                    <li>Use <strong>Add Transition</strong> <kbd>T</kbd> to connect them</li>
+                </ol>
+                <p class="fsm-empty-hint__sub">Then hit <strong>Synthesize Circuit</strong> to generate hardware</p>
+            </div>
+
+            <!-- Toast Notification (slides up from bottom of canvas) -->
+            <Transition name="toast">
+                <div 
+                    v-if="toast.visible" 
+                    :class="['fsm-toast', 'fsm-toast--' + toast.type]"
+                >
+                    {{ toast.message }}
+                </div>
+            </Transition>
         </div>
 
         <!-- State Properties Dialog -->
@@ -295,9 +326,36 @@ const showTransitionDialog = ref(false)
 const selectedStateData = ref<FSMState | null>(null)
 const selectedTransitionData = ref<FSMTransition | null>(null)
 
-// Validation
-const validationMessage = ref('Ready')
-const validationClass = ref('')
+
+// Toast notification state
+const toast = ref<{
+    visible: boolean
+    message: string
+    type: 'error' | 'success' | 'info'
+}>({
+    visible: false,
+    message: '',
+    type: 'info'
+})
+let toastTimer: ReturnType<typeof setTimeout> | null = null
+
+function showToast(message: string, type: 'error' | 'success' | 'info' = 'info', duration = 3000) {
+    // Clear any existing timer
+    if (toastTimer) clearTimeout(toastTimer)
+    
+    toast.value = { visible: true, message, type }
+    
+    toastTimer = setTimeout(() => {
+        toast.value.visible = false
+    }, duration)
+}
+
+// Collapsible section states (true = collapsed)
+const sections = ref({
+    config: true,       // Configuration collapsed by default
+    advanced: true,     // Advanced collapsed by default  
+    importExport: true,  // Import/Export collapsed by default
+})
 
 // Template and file handling
 const selectedTemplate = ref('')
@@ -329,9 +387,6 @@ interface KMapData {
 const showKMaps = ref(false)
 const kmapData = ref<KMapData[]>([])
 
-const canSynthesize = computed(() => {
-    return fsmStore.currentFSM && fsmStore.currentFSM.states.length > 0
-})
 
 onMounted(() => {
     // Initial setup - may be hidden, so we defer canvas init
@@ -377,6 +432,11 @@ onMounted(() => {
             setTool('state')
         } else if (e.key === 't' && !e.ctrlKey) {
             setTool('transition')
+        } else if (e.key === 'Delete' || e.key === 'Backspace') {
+            // Only delete if no input is focused (to avoid deleting text)
+            if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+                deleteSelected()
+            }
         }
     }
     
@@ -399,16 +459,13 @@ onMounted(() => {
 
 // Initialize canvas and FSM when tab is visible (with retry)
 function initializeIfVisible(retryCount = 0) {
-    console.log(`initializeIfVisible called (retry: ${retryCount})`)
     
     if (!fsmCanvas.value) {
-        console.log('No canvas ref yet')
         return
     }
     
     const container = fsmCanvas.value.parentElement
     if (!container) {
-        console.log('No container')
         return
     }
     
@@ -417,13 +474,11 @@ function initializeIfVisible(retryCount = 0) {
     const width = rect.width
     const height = rect.height
     
-    console.log(`Container dimensions: ${width}x${height}`)
     
     if (width <= 0 || height <= 0) {
         // Retry with increasing delay
         if (retryCount < 10) {
             const delay = 100 + retryCount * 100
-            console.log(`FSM Canvas container has no dimensions, retrying in ${delay}ms...`)
             setTimeout(() => initializeIfVisible(retryCount + 1), delay)
         } else {
             console.error('FSM Canvas container never got dimensions after 10 retries')
@@ -436,12 +491,10 @@ function initializeIfVisible(retryCount = 0) {
     fsmCanvas.value.height = Math.floor(height)
     ctx = fsmCanvas.value.getContext('2d')
     
-    console.log(`FSM Canvas initialized: ${fsmCanvas.value.width}x${fsmCanvas.value.height}`)
     
     // Create new FSM if not exist
     if (!fsmStore.currentFSM) {
         fsmStore.createNewFSM('New FSM', fsmType.value)
-        console.log('Created new FSM:', fsmStore.currentFSM)
     }
     
     drawCanvas()
@@ -469,23 +522,23 @@ function setTool(newTool: 'state' | 'transition' | 'select') {
 }
 
 function exitFSMEditor() {
+    // Reset toast state
+    if (toastTimer) clearTimeout(toastTimer)
+    toast.value.visible = false
+    
     exitFSMMode()
     simulatorMobileStore.isFSM = false
 }
 
 function drawCanvas() {
-    console.log('drawCanvas called, ctx exists:', !!ctx, 'canvas:', !!fsmCanvas.value)
     
     if (!ctx || !fsmCanvas.value) {
-        console.log('Cannot draw - ctx or canvas missing')
         return
     }
     
     const canvas = fsmCanvas.value
-    console.log(`Canvas dimensions: ${canvas.width}x${canvas.height}`)
     
     if (canvas.width <= 0 || canvas.height <= 0) {
-        console.log('Canvas has no dimensions, reinitializing...')
         initializeIfVisible()
         return
     }
@@ -509,11 +562,9 @@ function drawCanvas() {
     }
     
     if (!fsmStore.currentFSM) {
-        console.log('No FSM to draw')
         return
     }
     
-    console.log(`Drawing FSM: ${fsmStore.currentFSM.states.length} states, ${fsmStore.currentFSM.transitions.length} transitions`)
     
     // Draw transitions
     for (const transition of fsmStore.currentFSM.transitions) {
@@ -522,7 +573,6 @@ function drawCanvas() {
     
     // Draw states
     for (const state of fsmStore.currentFSM.states) {
-        console.log(`Drawing state ${state.id} at (${state.position.x}, ${state.position.y})`)
         drawState(state)
     }
     
@@ -563,53 +613,53 @@ function getStateColor(state: FSMState): StateColorScheme {
     if (isRed && isYellow) {
         // Red + Yellow = Amber/Orange transition state
         return {
-            fill: '#FF6F00',
-            highlight: '#FFB300',
-            border: '#E65100',
-            text: '#FFFFFF'
+            fill: '#FFE0B2',      // Material Orange 100 (very light)
+            highlight: '#FFF3E0', // Material Orange 50
+            border: '#FFB74D',    // Material Orange 300
+            text: '#E65100'       // Dark Orange text
         }
     }
     if (isRed) {
         return {
-            fill: '#D32F2F',      // Material Red 700
-            highlight: '#EF5350', // Material Red 400
-            border: '#B71C1C',    // Material Red 900
-            text: '#FFFFFF'
+            fill: '#FFCDD2',      // Material Red 100 (very light)
+            highlight: '#FFEBEE', // Material Red 50
+            border: '#E57373',    // Material Red 300
+            text: '#C62828'       // Dark Red text
         }
     }
     if (isYellow) {
         return {
-            fill: '#FBC02D',      // Material Yellow 700
-            highlight: '#FFEE58', // Material Yellow 400
-            border: '#F57F17',    // Material Yellow 900
-            text: '#212121'       // Dark text for contrast
+            fill: '#FFF9C4',      // Material Yellow 100 (very light)
+            highlight: '#FFFDE7', // Material Yellow 50
+            border: '#FFF176',    // Material Yellow 300
+            text: '#F57F17'       // Dark Yellow text
         }
     }
     if (isGreen) {
         return {
-            fill: '#388E3C',      // Material Green 700
-            highlight: '#66BB6A', // Material Green 400
-            border: '#1B5E20',    // Material Green 900
-            text: '#FFFFFF'
+            fill: '#C8E6C9',      // Material Green 100 (very light)
+            highlight: '#E8F5E9', // Material Green 50
+            border: '#81C784',    // Material Green 300
+            text: '#1B5E20'       // Dark Green text
         }
     }
     
-    // Default: Initial state is green accent, others are blue
+    // Default: Initial state is soft green, others are soft blue
     if (state.isInitial) {
         return {
-            fill: '#4CAF50',      // Material Green 500
-            highlight: '#81C784', // Material Green 300
-            border: '#2E7D32',    // Material Green 800
-            text: '#FFFFFF'
+            fill: '#C8E6C9',      // Material Green 100
+            highlight: '#E8F5E9', // Material Green 50
+            border: '#66BB6A',    // Material Green 400
+            text: '#1B5E20'
         }
     }
     
-    // Standard state color (blue)
+    // Standard state color (soft blue)
     return {
-        fill: '#1976D2',          // Material Blue 700
-        highlight: '#42A5F5',     // Material Blue 400
-        border: '#0D47A1',        // Material Blue 900
-        text: '#FFFFFF'
+        fill: '#BBDEFB',          // Material Blue 100
+        highlight: '#E3F2FD',     // Material Blue 50
+        border: '#64B5F6',        // Material Blue 300
+        text: '#0D47A1'           // Dark Blue text
     }
 }
 
@@ -736,16 +786,13 @@ function drawTransition(transition: FSMTransition) {
 }
 
 function handleMouseDown(e: MouseEvent) {
-    console.log('handleMouseDown called, tool:', tool.value)
     
     if (!fsmCanvas.value) {
-        console.log('No canvas reference')
         return
     }
     
     // Ensure FSM exists
     if (!fsmStore.currentFSM) {
-        console.log('Creating FSM on first click')
         fsmStore.createNewFSM('New FSM', fsmType.value)
     }
     
@@ -758,7 +805,6 @@ function handleMouseDown(e: MouseEvent) {
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
     
-    console.log(`Click at: ${x}, ${y}`)
     mousePos.value = { x, y }
     
     // Find clicked state
@@ -774,7 +820,6 @@ function handleMouseDown(e: MouseEvent) {
     } else if (tool.value === 'state') {
         // Add new state
         const stateId = `S${fsmStore.currentFSM.states.length}`
-        console.log(`Adding state ${stateId} at (${x}, ${y})`)
         fsmStore.addState({
             id: stateId,
             label: stateId,
@@ -782,17 +827,14 @@ function handleMouseDown(e: MouseEvent) {
             position: { x, y },
             outputs: {}
         })
-        console.log(`States after add: ${fsmStore.currentFSM.states.length}`, fsmStore.currentFSM.states)
     } else if (tool.value === 'transition') {
         if (clickedState) {
             if (!transitionStart.value) {
                 transitionStart.value = clickedState.id
-                console.log('Started transition from:', clickedState.id)
             } else {
                 // Create transition with auto-incrementing input value
                 const transitionId = `T${fsmStore.currentFSM.transitions.length}`
                 const inputValue = fsmStore.currentFSM.transitions.length
-                console.log(`Creating transition ${transitionId}`)
                 fsmStore.addTransition({
                     id: transitionId,
                     from: transitionStart.value,
@@ -806,7 +848,6 @@ function handleMouseDown(e: MouseEvent) {
         }
     }
     
-    console.log('Calling drawCanvas after click')
     drawCanvas()
 }
 
@@ -941,91 +982,136 @@ function deleteTransition() {
     }
 }
 
+function deleteSelected() {
+    if (fsmStore.selectedStateId) {
+        fsmStore.removeState(fsmStore.selectedStateId)
+        fsmStore.selectState(null)
+        showStateDialog.value = false
+        drawCanvas()
+    } else if (fsmStore.selectedTransitionId) {
+        fsmStore.removeTransition(fsmStore.selectedTransitionId)
+        fsmStore.selectTransition(null)
+        showTransitionDialog.value = false
+        drawCanvas()
+    } else {
+        showToast('Select a state or transition to delete', 'info')
+    }
+}
+
 function loadTemplateHandler() {
-    console.log('loadTemplateHandler called, selectedTemplate:', selectedTemplate.value)
     if (!selectedTemplate.value) return
     
     fsmStore.loadTemplate(selectedTemplate.value)
-    console.log('Template loaded, FSM:', fsmStore.currentFSM)
     drawCanvas()
     selectedTemplate.value = ''
 }
 
 function synthesizeCircuit() {
-    console.log('synthesizeCircuit called')
-    console.log('Current FSM:', fsmStore.currentFSM)
     
     if (!fsmStore.currentFSM) {
-        console.error('No FSM to synthesize')
-        validationMessage.value = 'No FSM to synthesize'
-        validationClass.value = 'error'
+        showToast('No FSM defined — add states first', 'error')
         return
     }
+
+    const fsm = fsmStore.currentFSM
     
-    console.log('FSM states:', fsmStore.currentFSM.states.length)
-    console.log('FSM transitions:', fsmStore.currentFSM.transitions.length)
+    // === Pre-synthesis validation with user-friendly messages ===
+    if (fsm.states.length === 0) {
+        showToast('No states — click canvas to add states', 'error')
+        return
+    }
+
+    if (!fsm.initialState) {
+        showToast('No initial state — double-click a state and mark it as initial', 'error')
+        return
+    }
+
+    if (fsm.transitions.length === 0) {
+        showToast('No transitions — use the Transition tool to connect states', 'error')
+        return
+    }
+
+    // Large FSM warning
+    if (fsm.states.length > 8) {
+        console.warn(`Large FSM with ${fsm.states.length} states — circuit may be complex`)
+    }
     
     try {
-        console.log('Validating FSM...')
-        const validation = validateFSM(fsmStore.currentFSM)
-        console.log('Validation result:', validation)
+        const validation = validateFSM(fsm)
         
         if (!validation.isValid) {
-            console.warn('Validation failed:', validation.completenessIssues)
-            validationMessage.value = `Validation: ${validation.completenessIssues.join(', ')}`
-            validationClass.value = 'error'
+            // Build specific, actionable messages
+            const issues: string[] = []
+            
+            for (const issue of validation.completenessIssues) {
+                if (issue.includes('initial state')) {
+                    issues.push('⚠️ Set an initial state (double-click a state)')
+                } else {
+                    issues.push('⚠️ ' + issue)
+                }
+            }
+            
+            if (validation.unreachableStates.length > 0) {
+                const names = validation.unreachableStates
+                    .map(id => fsm.states.find(s => s.id === id)?.label || id)
+                    .join(', ')
+                issues.push(`⚠️ Unreachable states: ${names} — add transitions to reach them`)
+            }
+            
+            if (validation.deadStates.length > 0) {
+                const names = validation.deadStates
+                    .map(id => fsm.states.find(s => s.id === id)?.label || id)
+                    .join(', ')
+                issues.push(`🚩 Dead-end states: ${names} — add outgoing transitions`)
+            }
+            
+            if (validation.conflicts.length > 0) {
+                issues.push(`❌ ${validation.conflicts.length} conflicting transition(s) — same input from same state`)
+            }
+            
+            showToast(issues[0] || 'Validation failed', 'error')
+            
+            // Log all issues for debugging
+            console.warn('FSM validation issues:', issues)
             return
         }
         
-        console.log('Generating circuit JSON...')
-        const projectData = generateCircuitVerseJSON(fsmStore.currentFSM) as any
-        console.log('Generated project data:', projectData)
+        // === Generate circuit ===
+        const projectData = generateCircuitVerseJSON(fsm) as any
         
         if (!projectData || !projectData.scopes || projectData.scopes.length === 0) {
             throw new Error('Failed to generate circuit data')
         }
 
         const scopeName = projectData.scopes[0].name
-        console.log('Creating new circuit scope:', scopeName)
         const scope = newCircuit(scopeName, undefined, false, false)
-        console.log('New scope created:', scope)
         
         if (!scope) {
             throw new Error('Failed to create new circuit scope')
         }
 
-        console.log('Loading scope data...')
         loadScope(scope, projectData.scopes[0])
 
-        console.log('Running FSM synthesizer...')
-        const synthesizer = new FSMSynthesizer(fsmStore.currentFSM)
+        const synthesizer = new FSMSynthesizer(fsm)
         synthesizer.synthesize()
         const ffCount = synthesizer.getFlipFlopCount()
-        console.log('Synthesis complete, flip-flops:', ffCount)
 
-        validationMessage.value = `✅ Circuit created in "${scopeName}"! (${ffCount} FFs)`
-        validationClass.value = 'success'
+        showToast(`Circuit "${scopeName}" created! (${ffCount} flip-flops)`, 'success', 5000)
         
-        // Store FSM scope ID and exit FSM mode to show circuit
-        console.log('Storing FSM scope and exiting FSM mode...')
         storeFSMScopeId()
         exitFSMMode()
         simulatorMobileStore.isFSM = false
-        console.log('Synthesis workflow complete')
             
     } catch (error) {
         console.error('Synthesis error:', error)
-        validationMessage.value = `Error: ${error}`
-        validationClass.value = 'error'
+        showToast(`Synthesis failed: ${error instanceof Error ? error.message : String(error)}`, 'error')
     }
 }
 
 // K-map visualization functions
 function generateKMaps() {
-    console.log('Generating K-maps...')
     if (!fsmStore.currentFSM || fsmStore.currentFSM.states.length === 0) {
-        validationMessage.value = 'No FSM states to generate K-maps'
-        validationClass.value = 'error'
+        showToast('No FSM states to generate K-maps', 'error')
         return
     }
     
@@ -1052,9 +1138,7 @@ function generateKMaps() {
     
     kmapData.value = maps
     showKMaps.value = true
-    validationMessage.value = `Generated ${maps.length} K-map(s)`
-    validationClass.value = 'success'
-    console.log('K-maps generated:', maps)
+    showToast(`Generated ${maps.length} K-map(s)`, 'success')
 }
 
 function generateSingleKMap(fsm: any, ffIndex: number, numFFs: number, varName: string): KMapData {
@@ -1210,7 +1294,15 @@ function getKmapGridStyle(numVars: number): Record<string, string> {
 }
 
 function exportVerilog() {
-    if (!fsmStore.currentFSM) return
+    if (!fsmStore.currentFSM) {
+        showToast('No FSM to export', 'error')
+        return
+    }
+
+    if (fsmStore.currentFSM.states.length === 0) {
+        showToast('Add states before exporting Verilog', 'error')
+        return
+    }
     
     try {
         const verilogCode = generateVerilogFromFSM(fsmStore.currentFSM)
@@ -1224,16 +1316,22 @@ function exportVerilog() {
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
         
-        validationMessage.value = '✅ Verilog exported!'
-        validationClass.value = 'success'
+        showToast('Verilog exported!', 'success')
     } catch (error) {
-        validationMessage.value = `Export error: ${error}`
-        validationClass.value = 'error'
+        showToast(`Export error: ${error instanceof Error ? error.message : String(error)}`, 'error')
     }
 }
 
 function minimizeStates() {
-    if (!fsmStore.currentFSM) return
+    if (!fsmStore.currentFSM) {
+        showToast('No FSM to minimize', 'error')
+        return
+    }
+
+    if (fsmStore.currentFSM.states.length < 2) {
+        showToast('Need at least 2 states to minimize', 'info')
+        return
+    }
     
     try {
         const result = minimizeFSM(fsmStore.currentFSM)
@@ -1243,18 +1341,15 @@ function minimizeStates() {
             fsmStore.currentFSM.transitions = result.minimizedFSM.transitions
             fsmStore.currentFSM.initialState = result.minimizedFSM.initialState
             
-            validationMessage.value = `✅ Minimized: ${result.originalStates} → ${result.minimizedStates} states`
-            validationClass.value = 'success'
+            showToast(`Minimized: ${result.originalStates} → ${result.minimizedStates} states`, 'success')
             
             calculateMetrics()
             drawCanvas()
         } else {
-            validationMessage.value = 'FSM is already minimal'
-            validationClass.value = 'info'
+            showToast('Already minimal — no equivalent states found', 'info')
         }
     } catch (error) {
-        validationMessage.value = `Minimize error: ${error}`
-        validationClass.value = 'error'
+        showToast(`Minimize error: ${error instanceof Error ? error.message : String(error)}`, 'error')
     }
 }
 
@@ -1324,12 +1419,10 @@ function loadFSM(event: Event) {
             fsmStore.loadFSMFromJSON(JSON.stringify(fsm))
             fsmType.value = fsm.type || 'MOORE'
             encoding.value = fsm.encoding || 'BINARY'
-            validationMessage.value = '✅ FSM loaded!'
-            validationClass.value = 'success'
+            showToast('FSM loaded!', 'success')
             drawCanvas()
         } catch (error) {
-            validationMessage.value = `Load error: ${error}`
-            validationClass.value = 'error'
+            showToast(`Load error: ${error instanceof Error ? error.message : String(error)}`, 'error')
         }
     }
     reader.readAsText(file)
@@ -1355,8 +1448,7 @@ function importVerilogFSM(event: Event) {
                 fsmStore.loadFSMFromJSON(JSON.stringify(result.fsm))
                 fsmType.value = result.fsm.type
                 encoding.value = result.fsm.encoding
-                validationMessage.value = '✅ Verilog FSM imported!'
-                validationClass.value = 'success'
+                showToast('Verilog FSM imported!', 'success')
                 
                 if (result.warnings.length > 0) {
                     console.warn('Import warnings:', result.warnings)
@@ -1364,12 +1456,10 @@ function importVerilogFSM(event: Event) {
                 
                 drawCanvas()
             } else {
-                validationMessage.value = `Import failed: ${result.error}`
-                validationClass.value = 'error'
+                showToast(`Import failed: ${result.error}`, 'error')
             }
         } catch (error) {
-            validationMessage.value = `Import error: ${error}`
-            validationClass.value = 'error'
+            showToast(`Import error: ${error instanceof Error ? error.message : String(error)}`, 'error')
         }
     }
     reader.readAsText(file)
@@ -1392,56 +1482,216 @@ function importVerilogFSM(event: Event) {
 .fsm-sidebar {
     width: 350px;
     min-width: 280px;
-    background: #3c3c3c;
-    color: white;
+    background: var(--primary);
+    color: var(--text-panel);
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     padding: 0;
-    border-right: 1px solid #2a2a2a;
+    border-right: 2px solid var(--br-primary);
 }
 
 .fsm-sidebar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 18px;
-    background: #333333;
-    border-bottom: 1px solid #4a4a4a;
+    padding: 10px 17px;
+    padding-top: 15px;
+    background: var(--primary);
+    border-bottom: 1px solid var(--br-secondary);
+    cursor: default;
 }
 
 .fsm-sidebar-header h3 {
     margin: 0;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: var(--text-panel);
 }
 
 .btn-close-fsm {
     background: transparent;
     border: none;
     color: #e74c3c;
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: background 0.2s;
+    padding: 2px 6px;
+    border-radius: 3px;
+    transition: all 0.2s;
 }
 
 .btn-close-fsm:hover {
-    background: rgba(231, 76, 60, 0.2);
+    background: rgba(231, 76, 60, 0.15);
 }
 
 .fsm-section {
-    padding: 16px 18px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--br-secondary);
 }
 
-.fsm-section h4 {
-    margin: 0 0 12px 0;
-    font-size: 13px;
+
+
+/* Compact icon toolbar */
+.fsm-toolbar-section {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--br-secondary);
+}
+
+
+.fsm-icon-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.fsm-toolbar-group {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.fsm-icon-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--br-secondary);
+    border-radius: 4px;
+    color: var(--text-panel);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.fsm-icon-btn:hover:not(:disabled) {
+    background: var(--bg-icons);
+}
+
+.fsm-icon-btn.active {
+    background: var(--bg-toggle-btn-primary);
+    border-color: var(--bg-toggle-btn-primary);
+    color: var(--text-lite);
+}
+
+.fsm-icon-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.fsm-icon-btn--danger:hover:not(:disabled) {
+    background: var(--btn-danger);
+    border-color: var(--btn-danger);
+}
+
+.fsm-toolbar-separator {
+    width: 1px;
+    height: 24px;
+    background: var(--br-secondary);
+    margin: 0 4px;
+}
+
+/* Synthesize section */
+.fsm-actions-section {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--br-secondary);
+}
+
+/* Collapsible sections */
+.fsm-collapsible {
+    border-bottom: 1px solid var(--br-secondary);
+}
+
+.fsm-section-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    margin: 0 !important;
+    padding: 10px 0;
+    font-size: 17px;
     font-weight: 500;
-    color: #888888;
+    line-height: 1.3;
+    color: var(--text-panel);
+    transition: opacity 0.15s;
 }
 
+.fsm-section-toggle:hover {
+    opacity: 0.8;
+}
+
+.fsm-section-toggle i {
+    font-size: 12px;
+    width: 16px;
+    text-align: center;
+    transition: transform 0.2s ease;
+    color: var(--text-panel);
+}
+
+.fsm-section-toggle i.fa-chevron-down {
+    transform: rotate(0deg);
+}
+
+.fsm-section-toggle i.fa-chevron-right {
+    transform: rotate(0deg);
+}
+
+.fsm-section-body {
+    margin-top: 10px;
+    overflow: hidden;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        max-height: 600px;
+        transform: translateY(0);
+    }
+}
+
+/* Subsection labels within Advanced */
+.fsm-subsection {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fsm-subsection:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.fsm-sublabel {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--br-secondary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+/* Inline metrics (inside Advanced) */
+.fsm-metrics-inline {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    border: 1px solid var(--br-secondary);
+}
+
+/* Legacy (keep for compatibility) */
 .fsm-tool-group {
     display: flex;
     flex-direction: column;
@@ -1453,23 +1703,22 @@ function importVerilogFSM(event: Event) {
     align-items: center;
     gap: 10px;
     padding: 10px 14px;
-    background: #4a4a4a;
-    border: 1px solid #5a5a5a;
-    border-radius: 6px;
-    color: white;
+    background: transparent;
+    border: 1px solid var(--br-secondary);
+    border-radius: 4px;
+    color: var(--text-panel);
     font-size: 14px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease-in-out;
 }
 
 .fsm-tool-btn:hover {
-    background: #555555;
-    border-color: #666666;
+    background: var(--bg-icons);
 }
 
 .fsm-tool-btn.active {
-    background: #3498db;
-    border-color: #3498db;
+    background: var(--bg-toggle-btn-primary);
+    border-color: var(--bg-toggle-btn-primary);
 }
 
 .fsm-btn-row {
@@ -1481,19 +1730,18 @@ function importVerilogFSM(event: Event) {
 .fsm-action-btn {
     flex: 1;
     min-width: 60px;
-    padding: 8px 12px;
-    background: #4a4a4a;
-    border: 1px solid #5a5a5a;
-    border-radius: 6px;
-    color: white;
-    font-size: 12px;
+    padding: 9px 12px;
+    background: transparent;
+    border: 1px solid var(--br-secondary);
+    border-radius: 4px;
+    color: var(--text-panel);
+    font-size: 13px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease-in-out;
 }
 
 .fsm-action-btn:hover:not(:disabled) {
-    background: #555555;
-    border-color: #666666;
+    background: var(--bg-icons);
 }
 
 .fsm-action-btn:disabled {
@@ -1514,7 +1762,7 @@ function importVerilogFSM(event: Event) {
 
 .fsm-field label {
     font-size: 13px;
-    color: #cccccc;
+    color: var(--text-panel);
 }
 
 .fsm-config-row {
@@ -1525,30 +1773,40 @@ function importVerilogFSM(event: Event) {
 }
 
 .fsm-config-row label {
-    font-size: 12px;
-    min-width: 60px;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+    min-width: 70px;
+    color: var(--text-panel);
 }
 
 .fsm-select {
     width: 100%;
-    padding: 10px 12px;
-    background: #2a2a2a;
-    border: none;
+    padding: 9px 12px;
+    background: var(--primary);
+    border: 1px solid var(--br-secondary);
     border-radius: 4px;
-    color: white;
+    color: var(--text-lite);
     font-size: 14px;
-    appearance: none; /* Remove default arrow */
+    appearance: none;
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 20px;
+    background-position: right 8px center;
+    background-size: 18px;
     cursor: pointer;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.fsm-select:hover {
+    border-color: var(--br-primary);
+}
+
+.fsm-select:focus {
+    outline: none;
+    border-color: var(--br-primary);
 }
 
 .fsm-select option {
-    background-color: #2a2a2a;
-    color: white;
+    background-color: var(--primary);
+    color: var(--text-lite);
     padding: 10px;
 }
 
@@ -1559,45 +1817,41 @@ function importVerilogFSM(event: Event) {
 }
 
 .fsm-primary-btn {
-    padding: 10px 12px;
-    background: #27ae60;
+    width: 100%;
+    padding: 10px 16px;
+    background-color: var(--bg-toggle-btn-primary);
     border: none;
     border-radius: 4px;
-    color: white;
-    font-size: 13px;
+    color: var(--text-lite);
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background-color 0.2s ease-in-out;
 }
 
-.fsm-primary-btn:hover:not(:disabled) {
-    background: #2ecc71;
-}
-
-.fsm-primary-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.fsm-primary-btn:hover {
+    background-color: var(--primary-btn-hov);
 }
 
 .fsm-secondary-btn {
     padding: 8px 12px;
-    background: #3498db;
-    border: none;
+    background: transparent;
+    border: 1px solid var(--br-secondary);
     border-radius: 4px;
-    color: white;
+    color: var(--text-panel);
     font-size: 12px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s ease-in-out;
 }
 
 .fsm-secondary-btn:hover {
-    background: #5dade2;
+    background: var(--bg-icons);
 }
 
 .fsm-metrics-panel {
     padding: 12px 16px;
-    background: rgba(0, 0, 0, 0.2);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid var(--br-secondary);
 }
 
 .fsm-metric {
@@ -1605,43 +1859,30 @@ function importVerilogFSM(event: Event) {
     justify-content: space-between;
     font-size: 12px;
     margin-bottom: 4px;
+    padding: 2px 0;
 }
 
 .fsm-metric span {
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--text-panel);
+    opacity: 0.7;
 }
 
 .fsm-metric strong {
-    color: #2ecc71;
+    color: var(--bg-toggle-btn-primary);
+    font-weight: 600;
 }
 
 .fsm-status {
     margin-top: auto;
-    padding: 12px 16px;
-    background: rgba(0, 0, 0, 0.3);
-}
-
-.fsm-status-msg {
-    font-size: 12px;
-    margin-bottom: 4px;
-    word-wrap: break-word;
-}
-
-.fsm-status-msg.success {
-    color: #2ecc71;
-}
-
-.fsm-status-msg.error {
-    color: #e74c3c;
-}
-
-.fsm-status-msg.info {
-    color: #3498db;
+    padding: 10px 16px;
+    border-top: 1px solid var(--br-secondary);
+    color: var(--text-panel);
 }
 
 .fsm-status-info {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+    color: var(--text-panel);
+    opacity: 0.7;
 }
 
 .fsm-canvas-container {
@@ -1657,6 +1898,111 @@ function importVerilogFSM(event: Event) {
     cursor: crosshair;
 }
 
+/* Empty canvas hint overlay */
+.fsm-empty-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #888;
+    pointer-events: none;
+    user-select: none;
+}
+
+.fsm-empty-hint__icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.fsm-empty-hint__title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #555;
+    margin: 0 0 16px;
+}
+
+.fsm-empty-hint__steps {
+    text-align: left;
+    display: inline-block;
+    font-size: 15px;
+    line-height: 2;
+    color: #666;
+    padding-left: 20px;
+    margin: 0 0 14px;
+}
+
+.fsm-empty-hint__steps kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 12px;
+    font-family: monospace;
+    background: #e8e8e8;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    color: #555;
+    margin-left: 4px;
+}
+
+.fsm-empty-hint__sub {
+    font-size: 13px;
+    color: #999;
+    margin: 0;
+}
+
+/* Toast notification — CV-style horizontal bar */
+.fsm-toast {
+    position: absolute;
+    bottom: 16px;
+    left: 24px;
+    right: 24px;
+    padding: 12px 18px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 100;
+    pointer-events: none;
+    border-left: 4px solid;
+}
+
+.fsm-toast--error {
+    background: rgba(220, 53, 69, 0.08);
+    border-left-color: #dc3545;
+    color: #721c24;
+}
+
+.fsm-toast--success {
+    background: rgba(40, 167, 69, 0.08);
+    border-left-color: #28a745;
+    color: #155724;
+}
+
+.fsm-toast--info {
+    background: rgba(23, 162, 184, 0.08);
+    border-left-color: #17a2b8;
+    color: #0c5460;
+}
+
+/* Vue <Transition name="toast"> */
+.toast-enter-active {
+    transition: all 0.3s ease-out;
+}
+
+.toast-leave-active {
+    transition: all 0.3s ease-in;
+}
+
+.toast-enter-from {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.toast-leave-to {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
 /* K-Map Visualization Styles */
 .kmap-container {
     margin-top: 10px;
@@ -1665,8 +2011,9 @@ function importVerilogFSM(event: Event) {
 }
 
 .kmap-card {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    border: 1px solid var(--br-secondary);
     padding: 10px;
     margin-bottom: 10px;
 }
@@ -1675,7 +2022,7 @@ function importVerilogFSM(event: Event) {
     font-weight: bold;
     font-size: 14px;
     margin-bottom: 8px;
-    color: #3498db;
+    color: var(--bg-toggle-btn-primary);
     text-align: center;
 }
 
